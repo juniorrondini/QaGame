@@ -26,6 +26,7 @@ export default function Header() {
         </nav>
         <MusicPlayer />
       </div>
+      <meta name="google-adsense-account" content="ca-pub-8997726626133132"></meta>
     </header>
   )
 }

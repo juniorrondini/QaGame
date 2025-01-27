@@ -120,6 +120,7 @@ const MusicPlayer = () => {
           className="w-20"
         />
       </div>
+      <meta name="google-adsense-account" content="ca-pub-8997726626133132"></meta>
       {currentTrack && <div className="text-cyan-400 text-xs truncate max-w-[150px]">{currentTrack.name}</div>}
     </div>
   )

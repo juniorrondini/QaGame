@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-
+<meta name="google-adsense-account" content="ca-pub-8997726626133132"></meta>
 interface Circuit {
   x: number
   y: number
