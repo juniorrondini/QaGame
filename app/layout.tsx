@@ -1,33 +1,37 @@
-import "./globals.css"
-import { Providers } from "./providers"
-import Header from "@/components/Header"
-import Footer from "@/components/Footer"
-import { Orbitron } from "next/font/google"
+import "./globals.css";
+import { Providers } from "./providers";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { Orbitron } from "next/font/google";
 
-const orbitron = Orbitron({ subsets: ["latin"] })
+const orbitron = Orbitron({ subsets: ["latin"] });
 
 export const metadata = {
   title: "CyberQuiz",
   description: "A futuristic quiz platform",
-}
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${orbitron.className} bg-black text-cyan-400`}>
         <Providers>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow relative">{children}</main>
-            <Footer />
+          <div className="flex flex-col min-h-screen relative">
+            {/* Header fixo no topo */}
+            <div className="fixed top-0 left-0 w-full z-50">
+              <Header />
+            </div>
+
+            {/* Conteúdo principal com padding-top e padding-bottom para não ficar atrás do Header/Footer */}
+            <main className="flex-grow pt-20 pb-16">{children}</main>
+
+            {/* Footer fixo no rodapé */}
+            <div className="fixed bottom-0 left-0 w-full z-50">
+              <Footer />
+            </div>
           </div>
         </Providers>
       </body>
     </html>
-  )
+  );
 }
-
