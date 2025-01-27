@@ -18,7 +18,7 @@ interface Question {
 }
 
 // --------------------------------------------------
-// Perguntas em INGLÊS (20 questões)
+// Perguntas em INGLÊS (20)
 // --------------------------------------------------
 const questionsEnglish: Question[] = [
   {
@@ -164,7 +164,7 @@ const questionsEnglish: Question[] = [
 ]
 
 // --------------------------------------------------
-// Perguntas em PORTUGUÊS (20 questões)
+// Perguntas em PORTUGUÊS (20)
 // --------------------------------------------------
 const questionsPortuguese: Question[] = [
   {
@@ -310,60 +310,81 @@ const questionsPortuguese: Question[] = [
 ]
 
 // --------------------------------------------------
+// Função auxiliar para embaralhar array
+// --------------------------------------------------
+function shuffleArray<T>(array: T[]): T[] {
+  const newArr = [...array]
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[newArr[i], newArr[j]] = [newArr[j], newArr[i]]
+  }
+  return newArr
+}
+
+// --------------------------------------------------
 // Componente principal: Quiz
 // --------------------------------------------------
 export default function Quiz() {
-  // --------------------------
-  // 1. Todos os Hooks no topo
-  // --------------------------
+  // 1. States e Hooks no topo
   const [selectedLanguage, setSelectedLanguage] = useState<"" | "en" | "pt">("")
+  const [numQuestions, setNumQuestions] = useState<0 | 5 | 10 | 15>(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(15)
   const [quizEnded, setQuizEnded] = useState(false)
   const [feedbackColor, setFeedbackColor] = useState("")
+
   const router = useRouter()
 
-  // --------------------------
-  // 2. Escolher perguntas
-  // --------------------------
-  // Se não tiver idioma selecionado, será um array vazio (para evitar acessar questionSet sem idioma)
-  let questionSet: Question[] = []
+  // 2. Define a lista completa de perguntas com base no idioma
+  let allQuestions: Question[] = []
   if (selectedLanguage === "en") {
-    questionSet = questionsEnglish
+    allQuestions = questionsEnglish
   } else if (selectedLanguage === "pt") {
-    questionSet = questionsPortuguese
+    allQuestions = questionsPortuguese
   }
 
-  // pergunta atual
-  const currentQuestion = questionSet[currentQuestionIndex]
+  // 3. Embaralhar completamente as perguntas somente quando o idioma mudar
+  //    Assim cada vez que user selecionar um idioma, a ordem muda.
+  const shuffledAll = useMemo(() => {
+    if (allQuestions.length > 0) {
+      return shuffleArray(allQuestions)
+    }
+    return []
+  }, [selectedLanguage]) // Re-embaralha só quando "selectedLanguage" muda
 
-  // embaralha as respostas
+  // 4. Se user escolheu numQuestions (5,10,15), cortamos do array embaralhado
+  //    para usar só a quantidade selecionada
+  const finalQuestions = useMemo(() => {
+    if (numQuestions > 0) {
+      return shuffledAll.slice(0, numQuestions)
+    }
+    return []
+  }, [shuffledAll, numQuestions])
+
+  // 5. Qual a questão atual?
+  const currentQuestion = finalQuestions[currentQuestionIndex] || null
+
+  // 6. Embaralha respostas da questão atual
   const answers = useMemo(() => {
     if (!currentQuestion) return []
-    return [...currentQuestion.incorrectAnswers, currentQuestion.correctAnswer].sort(() => Math.random() - 0.5)
+    return shuffleArray([...currentQuestion.incorrectAnswers, currentQuestion.correctAnswer])
   }, [currentQuestion])
 
-  // --------------------------
-  // 3. useEffect para tempo
-  // --------------------------
+  // 7. Controla o tempo
   useEffect(() => {
-    // Só faz contagem regressiva se quiz não acabou e tiver tempo > 0
-    if (!quizEnded && timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000)
+    if (!quizEnded && timeLeft > 0 && currentQuestion) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
       return () => clearTimeout(timer)
     }
-    // Se tempo zerou e quiz não acabou, vai pra próxima
     if (timeLeft === 0 && !quizEnded) {
       handleNextQuestion()
     }
-  }, [timeLeft, quizEnded])
+  }, [timeLeft, quizEnded, currentQuestion])
 
-  // --------------------------
-  // 4. Funções auxiliares
-  // --------------------------
-  function handleNextQuestion() {
-    if (currentQuestionIndex < questionSet.length - 1) {
+  // 8. Função para próxima questão
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < finalQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
       setTimeLeft(15)
     } else {
@@ -371,8 +392,9 @@ export default function Quiz() {
     }
   }
 
-  function handleAnswer(answer: string) {
-    const correct = answer === currentQuestion?.correctAnswer
+  // 9. Função para avaliar a resposta
+  const handleAnswer = (answer: string) => {
+    const correct = currentQuestion && answer === currentQuestion.correctAnswer
     setFeedbackColor(correct ? "green" : "red")
     if (correct) {
       setScore(score + 1)
@@ -383,31 +405,36 @@ export default function Quiz() {
     }, 1000)
   }
 
-  function restartQuiz() {
+  // 10. Reiniciar completamente o quiz
+  const restartQuiz = () => {
     setCurrentQuestionIndex(0)
     setScore(0)
     setTimeLeft(15)
     setQuizEnded(false)
   }
 
-  // --------------------------
-  // 5. Renderização
-  // --------------------------
+  // 11. Voltar para a tela inicial (reseta tudo)
+  const goBackToInitial = () => {
+    setSelectedLanguage("")
+    setNumQuestions(0)
+    setCurrentQuestionIndex(0)
+    setScore(0)
+    setTimeLeft(15)
+    setQuizEnded(false)
+    setFeedbackColor("")
+  }
+
+  // 12. Renderização única com condicionais
   return (
     <div className="min-h-screen flex items-center justify-center bg-black relative">
       <CircuitBackground />
 
-      {/* 
-        A) Se não escolheu idioma, exibe a tela de seleção
-        B) Se quiz já finalizou, mostra tela de resultados
-        C) Senão, mostra as perguntas
-      */}
       {!selectedLanguage ? (
-        // --------------------------------------
         // A) TELA DE SELEÇÃO DE IDIOMA
-        // --------------------------------------
         <div className="p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10 text-center">
-          <h2 className="text-4xl font-bold mb-6 text-electric-purple neon-text">Select your language</h2>
+          <h2 className="text-4xl font-bold mb-6 text-electric-purple neon-text">
+            Select your language
+          </h2>
           <div className="flex gap-4 justify-center">
             <Button
               onClick={() => setSelectedLanguage("en")}
@@ -423,10 +450,40 @@ export default function Quiz() {
             </Button>
           </div>
         </div>
+      ) : numQuestions === 0 ? (
+        // B) TELA DE SELEÇÃO DE QUANTIDADE DE QUESTÕES
+        <div className="p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10 text-center">
+          <h2 className="text-4xl font-bold mb-6 text-electric-purple neon-text">
+            {selectedLanguage === "en"
+              ? "Select number of questions"
+              : "Selecione a quantidade de questões"}
+          </h2>
+          <div className="flex gap-4 justify-center mb-6">
+            <Button
+              onClick={() => setNumQuestions(5)}
+              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
+            >
+              5
+            </Button>
+            <Button
+              onClick={() => setNumQuestions(10)}
+              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
+            >
+              10
+            </Button>
+            <Button
+              onClick={() => setNumQuestions(15)}
+              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
+            >
+              15
+            </Button>
+          </div>
+          <Button onClick={goBackToInitial} className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow">
+            {selectedLanguage === "en" ? "Back to start" : "Voltar à tela inicial"}
+          </Button>
+        </div>
       ) : quizEnded ? (
-        // --------------------------------------
-        // B) TELA DE RESULTADOS
-        // --------------------------------------
+        // C) TELA DE RESULTADOS
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -437,7 +494,8 @@ export default function Quiz() {
             {selectedLanguage === "en" ? "Quiz Completed!" : "Quiz Finalizado!"}
           </h2>
           <p className="text-2xl mb-6 text-cyan-400">
-            {selectedLanguage === "en" ? "Your score:" : "Sua pontuação:"} {score} / {questionSet.length}
+            {selectedLanguage === "en" ? "Your score:" : "Sua pontuação:"} {score} /{" "}
+            {finalQuestions.length}
           </p>
           <Button
             onClick={restartQuiz}
@@ -450,9 +508,7 @@ export default function Quiz() {
           </Button>
         </motion.div>
       ) : (
-        // --------------------------------------
-        // C) TELA COM A PERGUNTA ATUAL
-        // --------------------------------------
+        // D) TELA DO QUIZ (Pergunta atual)
         <div
           className={`w-full max-w-2xl p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10 ${
             feedbackColor ? `shake ${feedbackColor}-glow` : ""
@@ -480,13 +536,21 @@ export default function Quiz() {
                 </Button>
               ))}
             </div>
-            <div className="flex justify-between items-center">
+
+            <div className="flex justify-between items-center mb-4">
               <p className="text-lg text-cyan-400">
                 {selectedLanguage === "en" ? "Time left:" : "Tempo restante:"} {timeLeft}s
               </p>
               <p className="text-lg text-cyan-400">
                 {selectedLanguage === "en" ? "Score:" : "Pontuação:"} {score}
               </p>
+            </div>
+
+            {/* Botão para voltar à tela inicial (escolher idioma e número de perguntas novamente) */}
+            <div className="text-center">
+              <Button onClick={goBackToInitial} className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow">
+                {selectedLanguage === "en" ? "Back to initial screen" : "Voltar para tela inicial"}
+              </Button>
             </div>
           </motion.div>
         </div>
