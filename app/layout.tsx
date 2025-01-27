@@ -3,6 +3,7 @@ import { Providers } from "./providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Orbitron } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react"; // ✅ Importação correta
 
 const orbitron = Orbitron({ subsets: ["latin"] });
 
@@ -31,8 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </Providers>
+
+        {/* ✅ Adiciona o Analytics da Vercel */}
+        <Analytics />
       </body>
     </html>
   );
 }
-
