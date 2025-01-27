@@ -21,7 +21,14 @@ export default function Footer() {
             </li>
           </ul>
         </nav>
-        <p className="text-cyan-400 mt-2 md:mt-0">Developed by Junior Rondini</p>
+        <a 
+      href="https://github.com/juniorrondini"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-cyan-400 mt-2 md:mt-0 hover:text-cyan-300 transition-colors duration-200"
+    >
+      Developed by Junior Rondini
+    </a>
       </div>
     </footer>
   );

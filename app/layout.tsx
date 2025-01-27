@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             {/* Conteúdo principal com padding-top e padding-bottom para não ficar atrás do Header/Footer */}
-            <main className="flex-grow pt-20 pb-16">{children}</main>
+            <main className="flex-grow pt-20 pb-20 md:pt-24 md:pb-16">{children}</main>
 
             {/* Footer fixo no rodapé */}
             <div className="fixed bottom-0 left-0 w-full z-50">
@@ -35,3 +35,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+

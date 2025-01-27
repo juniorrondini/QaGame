@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+
 interface Circuit {
   x: number
   y: number
@@ -39,7 +40,8 @@ const CircuitBackground = () => {
           dx: (Math.random() - 0.5) * 1,
           dy: (Math.random() - 0.5) * 1,
           radius: Math.random() * 2 + 1,
-          color: `rgba(0, 255, 255, ${Math.random() * 0.5 + 0.5})`,
+          // Aumente aqui a opacidade inicial para ficar mais visível (ex: 0.6 a 1.0)
+          color: `rgba(0, 255, 255, ${Math.random() * 0.4 + 0.6})`,
         })
       }
     }
@@ -55,6 +57,7 @@ const CircuitBackground = () => {
       circuit.x += circuit.dx
       circuit.y += circuit.dy
 
+      // Rebate nas bordas
       if (circuit.x + circuit.radius > canvas.width || circuit.x - circuit.radius < 0) {
         circuit.dx = -circuit.dx
       }
@@ -76,7 +79,9 @@ const CircuitBackground = () => {
             ctx.beginPath()
             ctx.moveTo(circuits[i].x, circuits[i].y)
             ctx.lineTo(circuits[j].x, circuits[j].y)
-            ctx.strokeStyle = `rgba(0, 255, 255, ${0.2 * (1 - distance / connectionDistance)})`
+            ctx.strokeStyle = `rgba(0, 255, 255, ${
+              0.2 * (1 - distance / connectionDistance)
+            })`
             ctx.stroke()
           }
         }
@@ -107,8 +112,13 @@ const CircuitBackground = () => {
     }
   }, [])
 
-  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10" />
+  return (
+    <canvas
+      ref={canvasRef}
+      // IMPORTANTE: pointer-events-none e posicionamento com z-0 ou -z-10
+      className="pointer-events-none absolute top-0 left-0 w-full h-full -z-10"
+    />
+  )
 }
 
 export default CircuitBackground
-

@@ -1,5 +1,5 @@
 "use client"
-
+import { Analytics } from "@vercel/analytics/react"
 import { useState, useEffect, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -345,7 +345,6 @@ export default function Quiz() {
   }
 
   // 3. Embaralhar completamente as perguntas somente quando o idioma mudar
-  //    Assim cada vez que user selecionar um idioma, a ordem muda.
   const shuffledAll = useMemo(() => {
     if (allQuestions.length > 0) {
       return shuffleArray(allQuestions)
@@ -354,7 +353,6 @@ export default function Quiz() {
   }, [selectedLanguage]) // Re-embaralha só quando "selectedLanguage" muda
 
   // 4. Se user escolheu numQuestions (5,10,15), cortamos do array embaralhado
-  //    para usar só a quantidade selecionada
   const finalQuestions = useMemo(() => {
     if (numQuestions > 0) {
       return shuffledAll.slice(0, numQuestions)
@@ -426,135 +424,157 @@ export default function Quiz() {
 
   // 12. Renderização única com condicionais
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black relative">
+    // Container principal, onde o background de circuito fica sempre atrás (via position: absolute)
+    
+    <div className="relative min-h-screen z-10 bg-black overflow-hidden">
       <CircuitBackground />
 
-      {!selectedLanguage ? (
-        // A) TELA DE SELEÇÃO DE IDIOMA
-        <div className="p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10 text-center">
-          <h2 className="text-4xl font-bold mb-6 text-electric-purple neon-text">
-            Select your language
-          </h2>
-          <div className="flex gap-4 justify-center">
-            <Button
-              onClick={() => setSelectedLanguage("en")}
-              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
-            >
-              English
-            </Button>
-            <Button
-              onClick={() => setSelectedLanguage("pt")}
-              className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow"
-            >
-              Portuguese
-            </Button>
-          </div>
-        </div>
-      ) : numQuestions === 0 ? (
-        // B) TELA DE SELEÇÃO DE QUANTIDADE DE QUESTÕES
-        <div className="p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10 text-center">
-          <h2 className="text-4xl font-bold mb-6 text-electric-purple neon-text">
-            {selectedLanguage === "en"
-              ? "Select number of questions"
-              : "Selecione a quantidade de questões"}
-          </h2>
-          <div className="flex gap-4 justify-center mb-6">
-            <Button
-              onClick={() => setNumQuestions(5)}
-              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
-            >
-              5
-            </Button>
-            <Button
-              onClick={() => setNumQuestions(10)}
-              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
-            >
-              10
-            </Button>
-            <Button
-              onClick={() => setNumQuestions(15)}
-              className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
-            >
-              15
-            </Button>
-          </div>
-          <Button onClick={goBackToInitial} className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow">
-            {selectedLanguage === "en" ? "Back to start" : "Voltar à tela inicial"}
-          </Button>
-        </div>
-      ) : quizEnded ? (
-        // C) TELA DE RESULTADOS
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-center p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10"
-        >
-          <h2 className="text-4xl font-bold mb-4 text-electric-purple neon-text">
-            {selectedLanguage === "en" ? "Quiz Completed!" : "Quiz Finalizado!"}
-          </h2>
-          <p className="text-2xl mb-6 text-cyan-400">
-            {selectedLanguage === "en" ? "Your score:" : "Sua pontuação:"} {score} /{" "}
-            {finalQuestions.length}
-          </p>
-          <Button
-            onClick={restartQuiz}
-            className="mr-4 bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow"
-          >
-            {selectedLanguage === "en" ? "Restart Quiz" : "Reiniciar Quiz"}
-          </Button>
-          <Button onClick={() => router.push("/")} className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow">
-            {selectedLanguage === "en" ? "Back to Home" : "Voltar para Home"}
-          </Button>
-        </motion.div>
-      ) : (
-        // D) TELA DO QUIZ (Pergunta atual)
-        <div
-          className={`w-full max-w-2xl p-8 bg-gray-900 rounded-lg shadow-lg neon-glow z-10 ${
-            feedbackColor ? `shake ${feedbackColor}-glow` : ""
-          }`}
-        >
-          <motion.div
-            key={currentQuestion?.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-2xl font-bold mb-4 text-electric-purple neon-text">
-              {selectedLanguage === "en" ? "Question" : "Questão"} {currentQuestionIndex + 1}
-            </h2>
-            <p className="text-xl mb-6 text-cyan-400">{currentQuestion?.question}</p>
-            <div className="grid grid-cols-1 gap-4 mb-6">
-              {answers.map((answer, index) => (
+      {/* Conteúdo do quiz em si */}
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 py-8">
+        <div className="w-full max-w-2xl mx-auto">
+          {!selectedLanguage ? (
+            // A) TELA DE SELEÇÃO DE IDIOMA
+            <div className="p-6 bg-gray-900/80 rounded-lg shadow-lg neon-glow  text-center">
+              <h2 className="text-2xl md:text-4xl font-bold mb-6 text-electric-purple neon-text break-words">
+                Select your language
+              </h2>
+              <div className="flex gap-4 justify-center flex-wrap">
                 <Button
-                  key={index}
-                  onClick={() => handleAnswer(answer)}
-                  className="w-full text-left py-3 px-4 bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded transition duration-300"
+                  onClick={() => setSelectedLanguage("en")}
+                  className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow w-full sm:w-auto"
                 >
-                  {answer}
+                  English
                 </Button>
-              ))}
+                <Button
+                  onClick={() => setSelectedLanguage("pt")}
+                  className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow w-full sm:w-auto"
+                >
+                  Portuguese
+                </Button>
+              </div>
             </div>
-
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-lg text-cyan-400">
-                {selectedLanguage === "en" ? "Time left:" : "Tempo restante:"} {timeLeft}s
-              </p>
-              <p className="text-lg text-cyan-400">
-                {selectedLanguage === "en" ? "Score:" : "Pontuação:"} {score}
-              </p>
-            </div>
-
-            {/* Botão para voltar à tela inicial (escolher idioma e número de perguntas novamente) */}
-            <div className="text-center">
-              <Button onClick={goBackToInitial} className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow">
-                {selectedLanguage === "en" ? "Back to initial screen" : "Voltar para tela inicial"}
+          ) : numQuestions === 0 ? (
+            // B) TELA DE SELEÇÃO DE QUANTIDADE DE QUESTÕES
+            <div className="p-6 bg-gray-900/80 rounded-lg shadow-lg neon-glow z-10 text-center">
+              <h2 className="text-2xl md:text-4xl font-bold mb-6 text-electric-purple neon-text break-words">
+                {selectedLanguage === "en"
+                  ? "Select number of questions"
+                  : "Selecione a quantidade de questões"}
+              </h2>
+              <div className="flex gap-4 justify-center flex-wrap mb-6">
+                <Button
+                  onClick={() => setNumQuestions(5)}
+                  className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow w-full sm:w-auto"
+                >
+                  5
+                </Button>
+                <Button
+                  onClick={() => setNumQuestions(10)}
+                  className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow w-full sm:w-auto"
+                >
+                  10
+                </Button>
+                <Button
+                  onClick={() => setNumQuestions(15)}
+                  className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow w-full sm:w-auto"
+                >
+                  15
+                </Button>
+              </div>
+              <Button
+                onClick={goBackToInitial}
+                className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow w-full sm:w-auto"
+              >
+                {selectedLanguage === "en" ? "Back to start" : "Voltar à tela inicial"}
               </Button>
             </div>
-          </motion.div>
+          ) : quizEnded ? (
+            // C) TELA DE RESULTADOS
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-center p-6 bg-gray-900/80 rounded-lg shadow-lg neon-glow z-10"
+            >
+              <h2 className="text-2xl md:text-4xl font-bold mb-4 text-electric-purple neon-text break-words">
+                {selectedLanguage === "en" ? "Quiz Completed!" : "Quiz Finalizado!"}
+              </h2>
+              <p className="text-xl md:text-2xl mb-6 text-cyan-400 break-words">
+                {selectedLanguage === "en" ? "Your score:" : "Sua pontuação:"} {score} /{" "}
+                {finalQuestions.length}
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Button
+                  onClick={restartQuiz}
+                  className="bg-electric-purple hover:bg-electric-purple/80 text-white neon-glow w-full sm:w-auto"
+                >
+                  {selectedLanguage === "en" ? "Restart Quiz" : "Reiniciar Quiz"}
+                </Button>
+                <Button
+                  onClick={() => router.push("/")}
+                  className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow w-full sm:w-auto"
+                >
+                  {selectedLanguage === "en" ? "Back to Home" : "Voltar para Home"}
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            // D) TELA DO QUIZ (Pergunta atual)
+            <div
+              className={`w-full p-6 bg-gray-900/80 rounded-lg shadow-lg neon-glow z-10 ${
+                feedbackColor ? `shake ${feedbackColor}-glow` : ""
+              }`}
+            >
+              <motion.div
+                key={currentQuestion?.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <h2 className="text-xl md:text-2xl font-bold mb-4 text-electric-purple neon-text break-words">
+                  {selectedLanguage === "en" ? "Question" : "Questão"} {currentQuestionIndex + 1}
+                </h2>
+                <p className="text-base md:text-xl mb-6 text-cyan-400 break-words">
+                  {currentQuestion?.question}
+                </p>
+                <div className="grid grid-cols-1 gap-4 mb-6">
+                  {answers.map((answer, index) => (
+                    <Button
+                      key={index}
+                      onClick={() => handleAnswer(answer)}
+                      className="w-full text-left py-3 px-4 bg-gray-800 hover:bg-gray-700 text-cyan-400 rounded transition duration-300 text-sm md:text-base"
+                    >
+                      {answer}
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap justify-between items-center mb-4 gap-4">
+                  <p className="text-sm md:text-lg text-cyan-400">
+                    {selectedLanguage === "en" ? "Time left:" : "Tempo restante:"} {timeLeft}s
+                  </p>
+                  <p className="text-sm md:text-lg text-cyan-400">
+                    {selectedLanguage === "en" ? "Score:" : "Pontuação:"} {score}
+                  </p>
+                </div>
+
+                {/* Botão para voltar à tela inicial */}
+                <div className="text-center">
+                  <Button
+                    onClick={goBackToInitial}
+                    className="bg-cyan-700 hover:bg-cyan-600 text-white neon-glow w-full sm:w-auto"
+                  >
+                    {selectedLanguage === "en"
+                      ? "Back to initial screen"
+                      : "Voltar para tela inicial"}
+                  </Button>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
