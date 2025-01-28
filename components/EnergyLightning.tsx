@@ -28,6 +28,7 @@ const EnergyLightning = () => {
       life: number
       maxLife: number
       color: string
+      segments: { x: number, y: number }[]
 
       constructor() {
         this.x = Math.random() * canvas.width
@@ -37,20 +38,41 @@ const EnergyLightning = () => {
         this.life = 0
         this.maxLife = Math.floor(Math.random() * 20) + 10
         this.color = `hsla(180, 100%, ${Math.floor(Math.random() * 20 + 80)}%, ${Math.random() * 0.3 + 0.1})`
+        this.segments = this.generateSegments()
+      }
+
+      generateSegments() {
+        const segments = []
+        let x = this.x
+        let y = this.y
+        while (y < this.yEnd) {
+          x += (Math.random() - 0.5) * 50
+          y += Math.random() * 20 + 10
+          segments.push({ x, y })
+        }
+        return segments
       }
 
       draw() {
         ctx!.beginPath()
         ctx!.moveTo(this.x, this.y)
 
-        // Create a jagged path
-        let x = this.x
-        let y = this.y
-        while (y < this.yEnd) {
-          x += (Math.random() - 0.5) * 50
-          y += Math.random() * 20 + 10
-          ctx!.lineTo(x, y)
-        }
+        // Draw main lightning path
+        this.segments.forEach(segment => {
+          ctx!.lineTo(segment.x, segment.y)
+        })
+
+        // Draw branches
+        this.segments.forEach((segment, index) => {
+          if (Math.random() < 0.3 && index < this.segments.length - 1) {
+            const branchLength = Math.random() * 50
+            const angle = Math.random() * Math.PI * 2
+            const branchX = segment.x + Math.cos(angle) * branchLength
+            const branchY = segment.y + Math.sin(angle) * branchLength
+            ctx!.moveTo(segment.x, segment.y)
+            ctx!.lineTo(branchX, branchY)
+          }
+        })
 
         ctx!.strokeStyle = this.color
         ctx!.lineWidth = Math.random() * 1 + 0.5
@@ -72,6 +94,7 @@ const EnergyLightning = () => {
         this.life = 0
         this.maxLife = Math.floor(Math.random() * 20) + 10
         this.color = `hsla(180, 100%, ${Math.floor(Math.random() * 20 + 80)}%, ${Math.random() * 0.3 + 0.1})`
+        this.segments = this.generateSegments()
       }
     }
 
@@ -111,4 +134,3 @@ const EnergyLightning = () => {
 }
 
 export default EnergyLightning
-
