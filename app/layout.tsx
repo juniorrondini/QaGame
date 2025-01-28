@@ -15,6 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      
       <body className={`${orbitron.className} bg-black text-cyan-400`}>
         <Providers>
           <div className="flex flex-col min-h-screen relative">
@@ -34,6 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Providers>
 
         {/* ✅ Adiciona o Analytics da Vercel */}
+      <script async src="https://appsha-prm.ctengine.io/js/script.js?wkey=t2JICZ00LK"></script>
+    
         <Analytics />
       </body>
     </html>
