@@ -36,6 +36,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* ✅ Adiciona o Analytics da Vercel */}
       <script async src="https://appsha-prm.ctengine.io/js/script.js?wkey=t2JICZ00LK"></script>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997726626133132"
+     crossOrigin="anonymous"></script>
     
         <Analytics />
       </body>

@@ -24,6 +24,8 @@ export default function Contact() {
         >
           Our contact page is currently under construction. Please check back soon for ways to get in touch with us!
         </motion.p>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997726626133132"
+     crossOrigin="anonymous"></script>
       </div>
     </div>
   )

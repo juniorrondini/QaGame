@@ -26,6 +26,8 @@ export default function About() {
           provide a unique and immersive quiz experience in a futuristic cyberpunk setting. Stay tuned as we continue to
           evolve and bring you cutting-edge quiz challenges!
         </motion.p>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997726626133132"
+     crossOrigin="anonymous"></script>
       </div>
     </div>
   )
